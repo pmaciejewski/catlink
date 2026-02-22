@@ -3,7 +3,7 @@
 import asyncio
 
 from homeassistant.components import persistent_notification
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
@@ -24,11 +24,12 @@ class CatlinkEntity(CoordinatorEntity):
         self._option = option or {}
         display_name = self._option.get("name", name)
         self._attr_name = f"{device.name} {display_name}".strip()
-        self._attr_device_id = f"{device.type}_{device.mac}"
-        self._attr_unique_id = f"{self._attr_device_id}-{name}"
+        self._catlink_device_id = f"{device.type}_{device.mac}"
+        self._attr_unique_id = f"{self._catlink_device_id}-{name}"
         mac = device.mac[-4:] if device.mac else device.id
         object_id = f"{device.type}_{mac}_{name}"
-        self.entity_id = f"{DOMAIN}.{slugify(object_id)}"
+        entity_domain = getattr(self, "_entity_domain", DOMAIN)
+        self.entity_id = f"{entity_domain}.{slugify(object_id)}"
         self._attr_icon = self._option.get("icon")
         self._attr_device_class = self._option.get("class")
         self._attr_native_unit_of_measurement = self._option.get("unit")
@@ -38,11 +39,17 @@ class CatlinkEntity(CoordinatorEntity):
             self._attr_entity_picture = entity_picture()
         elif entity_picture:
             self._attr_entity_picture = entity_picture
+        connections = (
+            {(CONNECTION_NETWORK_MAC, device.mac)} if device.mac else set()
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_device_id)},
+            identifiers={(DOMAIN, self._catlink_device_id)},
+            connections=connections,
             name=device.name,
             model=device.model,
+            model_id=device.type,
             manufacturer="CatLink",
+            serial_number=device.id,
             sw_version=device.detail.get("firmwareVersion"),
         )
 

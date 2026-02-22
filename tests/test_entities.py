@@ -70,7 +70,7 @@ class TestCatlinkEntity:
         assert entity._attr_icon == "mdi:alert"
         assert "Test Litter Box" in entity._attr_name
         assert "error" in entity._attr_name
-        assert entity._attr_device_id == "LITTER_BOX_599_AABBCCDDEEFF"
+        assert entity._catlink_device_id == "LITTER_BOX_599_AABBCCDDEEFF"
         assert entity._attr_unique_id == "LITTER_BOX_599_AABBCCDDEEFF-error"
 
     def test_entity_device_info(
